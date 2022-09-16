@@ -1,0 +1,325 @@
+#include "mainwindow.h"
+#include"ui_mainwindow.h"
+#include <QMessageBox>
+#include <QComboBox>
+#include <QPrintDialog>
+#include <QSystemTrayIcon>
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    ui->tableView->setModel(tmpclient.afficher());
+
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+   ui->stackedWidget->setCurrentIndex(1);
+}
+void MainWindow::on_pushButton_15_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(0);
+}
+
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    //int id = ui->lineEdit_8->text().toInt();
+    QString nom= ui->lineEdit_2->text();
+    QString prenom= ui->lineEdit_3->text();
+    int age= ui->lineEdit_4->text().toInt();
+    QString mail= ui->lineEdit_5->text();
+    QString ville= ui->lineEdit_6->text();
+    QString num= ui->lineEdit->text();
+    client f (nom, prenom, age,mail,ville,num);
+  bool tests=f.ajouter();
+  if(tests)
+{ui->tableView->setModel(tmpclient.afficher());//refresh
+QMessageBox::information(nullptr, QObject::tr("Ajouter un client"),
+                  QObject::tr("fournisseur ajouté.\n"
+                              "Click Cancel to exit."), QMessageBox::Cancel);
+
+}
+  else
+      QMessageBox::critical(nullptr, QObject::tr("Ajouter un client"),
+                  QObject::tr("Erreur !.\n"
+                              "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    int id= ui->lineEdit_7->text().toInt();
+   //
+    QString nom= ui->lineEdit_2->text();
+    QString prenom= ui->lineEdit_3->text();
+    int age= ui->lineEdit_4->text().toInt();
+    QString mail= ui->lineEdit_5->text();
+    QString ville= ui->lineEdit_6->text();
+    QString num= ui->lineEdit->text();
+    client f (nom, prenom, age, mail, ville, num);
+       bool test=f.modifier(id);
+
+       if(test)
+       {
+         ui->tableView->setModel(tmpclient.afficher());//refresh
+     QMessageBox::information(nullptr, QObject::tr("modifier un client"),
+                       QObject::tr("fournisseur modifié.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
+
+     }
+       else
+           QMessageBox::critical(nullptr, QObject::tr("modifier un client"),
+                       QObject::tr("Erreur !.\n"
+                                   "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_5_clicked()
+{
+    int id = ui->lineEdit_15->text().toInt();
+    bool test=tmpclient.supprimer(id);
+    if(test)
+    {ui->tableView->setModel(tmpclient.afficher());//refresh
+        QMessageBox::information(nullptr, QObject::tr("Supprimer un client"),
+                    QObject::tr("client supprimé.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+    }
+    else
+        QMessageBox::critical(nullptr, QObject::tr("Supprimer un client"),
+                    QObject::tr("Erreur !.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_radioButton_clicked()
+{
+     ui->tableView->setModel(tmpclient.tri());
+}
+void MainWindow::on_radioButton_2_clicked()
+{
+     ui->tableView->setModel(tmpclient.tri2());
+}
+void MainWindow::on_pushButton_7_clicked()
+{
+    //rechercher
+
+    int id = ui->lineEdit_7->text().toInt();
+    ui->tableView->setModel(tmpclient.recherche(id));
+
+      QMessageBox::information(this, QObject::tr("Rechercher un client"),
+           QObject::tr("client recherché.\n"
+                       "Click Cancel to exit."), QMessageBox::Cancel);
+}
+void MainWindow::on_pushButton_8_clicked()
+{
+    QString strStream;
+                            QTextStream out(&strStream);
+
+                            const int rowCount = ui->tableView->model()->rowCount();
+                            const int columnCount = ui->tableView->model()->columnCount();
+                            QString TT = QDate::currentDate().toString("yyyy/MM/dd");
+                            out <<"<html>\n"
+                                  "<head>\n"
+                                   "<meta Content=\"Text/html; charset=Windows-1251\">\n"
+                                << "<title>ERP - COMmANDE LIST<title>\n "
+                                << "</head>\n"
+                                "<body bgcolor=#ffffff link=#5000A0>\n"
+                                "<h1 style=\"text-align: center;\"><strong> ***** Promotions ***** "+TT+"</strong></h1>"
+                                "<table style=\"text-align: center; font-size: 20px;\" border=1>\n "
+                                  "</br> </br>";
+                            // headers
+                            out << "<thead><tr bgcolor=#d6e5ff>";
+                            for (int column = 0; column < columnCount; column++)
+                                if (!ui->tableView->isColumnHidden(column))
+                                    out << QString("<th>%1</th>").arg(ui->tableView->model()->headerData(column, Qt::Horizontal).toString());
+                            out << "</tr></thead>\n";
+
+                            // data table
+                            for (int row = 0; row < rowCount; row++) {
+                                out << "<tr>";
+                                for (int column = 0; column < columnCount; column++) {
+                                    if (!ui->tableView->isColumnHidden(column)) {
+                                        QString data =ui->tableView->model()->data(ui->tableView->model()->index(row, column)).toString().simplified();
+                                        out << QString("<td bkcolor=0>%1</td>").arg((!data.isEmpty()) ? data : QString("&nbsp;"));
+                                    }
+                                }
+                                out << "</tr>\n";
+                            }
+                            out <<  "</table>\n"
+                                "</body>\n"
+                                "</html>\n";
+
+                            QTextDocument *document = new QTextDocument();
+                            document->setHtml(strStream);
+
+                            QPrinter printer;
+
+                            QPrintDialog *dialog = new QPrintDialog(&printer, NULL);
+                            if (dialog->exec() == QDialog::Accepted) {
+                                document->print(&printer);
+                            }
+
+                            delete document;
+}
+void MainWindow::on_pushButton_9_clicked()
+{
+  mysystem->showMessage(tr("notification"),tr("client est ajoutée"));
+}
+
+//************************************************************ Events  ****************************************************************
+
+void MainWindow::on_pushButton_10_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(2);
+
+}
+
+void MainWindow::on_pushButton_51_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(0);
+
+}
+
+void MainWindow::on_pushButton_52_clicked()
+{
+    QString facture= ui->lineEdit_50->text();
+       QDateTime datefacture= ui->dateTimeEdit->dateTime();
+
+       events c(facture,datefacture );
+     bool tests=c.ajouter();
+     if(tests)
+   {ui->tableView_8->setModel(tmpevent.afficher());//refresh
+   QMessageBox::information(nullptr, QObject::tr("Ajouter une événement"),
+                     QObject::tr("événement ajouté.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+
+   }
+     else
+         QMessageBox::critical(nullptr, QObject::tr("Ajouter une événement"),
+                     QObject::tr("Erreur !.\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_53_clicked()
+{
+    int codecom= ui->lineEdit_49->text().toInt();
+       QString facture= ui->lineEdit_50->text();
+       QDateTime datefacture= ui->dateTimeEdit->dateTime();
+
+          event c(facture,datefacture);
+          bool test=c.modifier(codecom);
+
+          if(test)
+          {
+            ui->tableView_8->setModel(tmpcom.afficher());//refresh
+        QMessageBox::information(nullptr, QObject::tr("modifier un événement"),
+                          QObject::tr("événement modifié.\n"
+                                      "Click Cancel to exit."), QMessageBox::Cancel);
+
+        }
+          else
+              QMessageBox::critical(nullptr, QObject::tr("modifier un événement"),
+                          QObject::tr("Erreur !.\n"
+                                      "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_55_clicked()
+{
+    int codecom = ui->lineEdit_51->text().toInt();
+      bool test=tmpcom.supprimer(codecom);
+      if(test)
+      {ui->tableView_8->setModel(tmpcom.afficher());//refresh
+          QMessageBox::information(nullptr, QObject::tr("Supprimer un événement"),
+                      QObject::tr("événement supprimée.\n"
+                                  "Click Cancel to exit."), QMessageBox::Cancel);
+
+      }
+      else
+          QMessageBox::critical(nullptr, QObject::tr("Supprimer une événement"),
+                      QObject::tr("Erreur !.\n"
+                                  "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+
+//PDF
+void MainWindow::on_pushButton_56_clicked()
+{
+    QString strStream;
+                            QTextStream out(&strStream);
+
+                            const int rowCount = ui->tableView->model()->rowCount();
+                            const int columnCount = ui->tableView->model()->columnCount();
+                            QString TT = QDate::currentDate().toString("yyyy/MM/dd");
+                            out <<"<html>\n"
+                                  "<head>\n"
+                                   "<meta Content=\"Text/html; charset=Windows-1251\">\n"
+                                << "<title>ERP - COMmANDE LIST<title>\n "
+                                << "</head>\n"
+                                "<body bgcolor=#ffffff link=#5000A0>\n"
+                                "<h1 style=\"text-align: center;\"><strong> ***** Promotions ***** "+TT+"</strong></h1>"
+                                "<table style=\"text-align: center; font-size: 20px;\" border=1>\n "
+                                  "</br> </br>";
+                            // headers
+                            out << "<thead><tr bgcolor=#d6e5ff>";
+                            for (int column = 0; column < columnCount; column++)
+                                if (!ui->tableView->isColumnHidden(column))
+                                    out << QString("<th>%1</th>").arg(ui->tableView->model()->headerData(column, Qt::Horizontal).toString());
+                            out << "</tr></thead>\n";
+
+                            // data table
+                            for (int row = 0; row < rowCount; row++) {
+                                out << "<tr>";
+                                for (int column = 0; column < columnCount; column++) {
+                                    if (!ui->tableView->isColumnHidden(column)) {
+                                        QString data =ui->tableView->model()->data(ui->tableView->model()->index(row, column)).toString().simplified();
+                                        out << QString("<td bkcolor=0>%1</td>").arg((!data.isEmpty()) ? data : QString("&nbsp;"));
+                                    }
+                                }
+                                out << "</tr>\n";
+                            }
+                            out <<  "</table>\n"
+                                "</body>\n"
+                                "</html>\n";
+
+                            QTextDocument *document = new QTextDocument();
+                            document->setHtml(strStream);
+
+                            QPrinter printer;
+
+                            QPrintDialog *dialog = new QPrintDialog(&printer, NULL);
+                            if (dialog->exec() == QDialog::Accepted) {
+                                document->print(&printer);
+                            }
+
+                            delete document;
+}
+
+void MainWindow::on_radioButton_9_clicked()
+{
+    ui->tableView->setModel(tmpevent.tri());
+
+}
+
+void MainWindow::on_radioButton_10_clicked()
+{
+    ui->tableView->setModel(tmpevent.tri2());
+
+}
+
+void MainWindow::on_pushButton_54_clicked()
+{
+    int id = ui->lineEdit_49->text().toInt();
+    ui->tableView->setModel(tmpevent.recherche(id));
+
+      QMessageBox::information(this, QObject::tr("Rechercher un événement"),
+           QObject::tr("événement recherché.\n"
+                       "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+
